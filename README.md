@@ -45,7 +45,7 @@ Example Playbook
 - name: Install server
   hosts: server
   roles:
-  - role: openvpn-server
+  - role: farynam.mfitbs-openvpn-server
 
 
 License
