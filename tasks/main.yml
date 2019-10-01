@@ -1,8 +1,8 @@
 - include_role:
     name: "{{ roleinputvar }}"
   loop:
-    - openvpn-generic
-    - openvpn-easyrsa
+    - farynam.openvpn_generic
+    - farynam.openvpn_easyrsa
   loop_control:
     loop_var: roleinputvar
 
