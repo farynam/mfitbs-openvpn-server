@@ -7,7 +7,7 @@
     loop_var: roleinputvar
 
 - name: Build Server Cert
-  shell: easyrsa --subject-alt-name="{{ id_type }}:{{ ansible_host }}" build-server-full {{ ansible_host }} nopass
+  command: easyrsa --subject-alt-name="{{ id_type }}:{{ ansible_host }}" build-server-full {{ ansible_host }} nopass
   args:
     chdir: /root
     creates: "{{ PKI_DIR }}/issued/{{ ansible_host }}.crt"
@@ -15,17 +15,17 @@
     PATH: "{{ EASY_RSA_BIN }}:{{ ansible_env.PATH }}"
 
 - name: Copy Server cert to the Server
-  shell: rsync -az --rsh="/usr/bin/sshpass -p {{ansible_password}} ssh -o StrictHostKeyChecking=no -l root" "{{hostvars[easy_rsa_host]['ansible_default_ipv4']['address']}}:{{PKI_DIR}}/issued/{{ansible_host}}.crt" "{{host_pki_dir}}/{{ansible_host}}.crt"
+  command: rsync -az --rsh="/usr/bin/sshpass -p {{ansible_password}} ssh -o StrictHostKeyChecking=no -l root" "{{hostvars[easy_rsa_host]['ansible_default_ipv4']['address']}}:{{PKI_DIR}}/issued/{{ansible_host}}.crt" "{{host_pki_dir}}/{{ansible_host}}.crt"
   args:
     creates: "{{ host_pki_dir }}/{{ ansible_host }}.crt"
 
 - name: Copy Server key to the Server
-  shell: rsync -az --rsh="/usr/bin/sshpass -p {{ansible_password}} ssh -o StrictHostKeyChecking=no -l root" "{{hostvars[easy_rsa_host]['ansible_default_ipv4']['address']}}:{{PKI_DIR}}/private/{{ansible_host}}.key" "{{host_pki_dir}}/{{ansible_host}}.key"
+  command: rsync -az --rsh="/usr/bin/sshpass -p {{ansible_password}} ssh -o StrictHostKeyChecking=no -l root" "{{hostvars[easy_rsa_host]['ansible_default_ipv4']['address']}}:{{PKI_DIR}}/private/{{ansible_host}}.key" "{{host_pki_dir}}/{{ansible_host}}.key"
   args:
     creates: "{{ host_pki_dir }}/{{ ansible_host }}.key"
 
 - name: Copy CA to the server
-  shell: rsync -az --rsh="/usr/bin/sshpass -p {{ ansible_password }} ssh -o StrictHostKeyChecking=no -l root" "{{ hostvars[easy_rsa_host]['ansible_default_ipv4']['address'] }}:{{ PKI_DIR }}/{{ ca_cn }}.crt" "{{ host_pki_dir }}/{{ ca_cn }}.crt"
+  command: rsync -az --rsh="/usr/bin/sshpass -p {{ ansible_password }} ssh -o StrictHostKeyChecking=no -l root" "{{ hostvars[easy_rsa_host]['ansible_default_ipv4']['address'] }}:{{ PKI_DIR }}/{{ ca_cn }}.crt" "{{ host_pki_dir }}/{{ ca_cn }}.crt"
   args:
     creates: "{{ host_pki_dir }}/{{ ca_cn }}.crt"
 
@@ -49,7 +49,7 @@
     mode: '0770'
 
 - name: Enable Server
-  shell: systemctl enable openvpn@server.service
+  command: systemctl enable openvpn@server.service
 
 - name: Restart openvpn
-  shell: systemctl restart openvpn@server.service
+  command: systemctl restart openvpn@server.service
