@@ -1,7 +1,7 @@
 Role Name
 =========
 
-Simple private network deployment tool through Ansible based on OpenVPN. This is a server part.
+mfitbs_openvpn_server
 
 Requirements
 ------------
