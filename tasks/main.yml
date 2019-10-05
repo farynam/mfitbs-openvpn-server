@@ -1,52 +1,55 @@
 - include_role:
-    name: "{{ roleinputvar }}"
-  loop:
-    - farynam.mfitbs_openvpn_generic
-    - farynam.mfitbs_openvpn_easyrsa
-  loop_control:
-    loop_var: roleinputvar
+    name: farynam.mfitbs_openvpn_easyrsa
+  vars:
+    importServerCertGen : true
 
-- name: Build Server Cert
-  command: easyrsa --subject-alt-name="{{ id_type }}:{{ ansible_host }}" build-server-full {{ ansible_host }} nopass
-  args:
-    chdir: /root
-    creates: "{{ PKI_DIR }}/issued/{{ ansible_host }}.crt"
-  environment:
-    PATH: "{{ EASY_RSA_BIN }}:{{ ansible_env.PATH }}"
+- name: Create host pki dir
+  file:
+    path: "{{ host_pki_dir }}"
+    state: directory
+    mode: '0700'
 
-- name: Copy Server cert to the Server
-  command: rsync -az --rsh="/usr/bin/sshpass -p {{ansible_password}} ssh -o StrictHostKeyChecking=no -l root" "{{hostvars[easy_rsa_host]['ansible_default_ipv4']['address']}}:{{PKI_DIR}}/issued/{{ansible_host}}.crt" "{{host_pki_dir}}/{{ansible_host}}.crt"
-  args:
-    creates: "{{ host_pki_dir }}/{{ ansible_host }}.crt"
+- name: Copy Server cert to the machine
+  copy:
+    src: "{{ LOCAL_REPO }}/servers/issued/{{ server_host }}.crt"
+    dest: "{{ host_pki_dir }}/."
+    mode: 0600
 
 - name: Copy Server key to the Server
-  command: rsync -az --rsh="/usr/bin/sshpass -p {{ansible_password}} ssh -o StrictHostKeyChecking=no -l root" "{{hostvars[easy_rsa_host]['ansible_default_ipv4']['address']}}:{{PKI_DIR}}/private/{{ansible_host}}.key" "{{host_pki_dir}}/{{ansible_host}}.key"
-  args:
-    creates: "{{ host_pki_dir }}/{{ ansible_host }}.key"
+  copy:
+    src: "{{ LOCAL_REPO }}/servers/private/{{ server_host }}.key"
+    dest: "{{ host_pki_dir }}/."
+    mode: 0600
 
 - name: Copy CA to the server
-  command: rsync -az --rsh="/usr/bin/sshpass -p {{ ansible_password }} ssh -o StrictHostKeyChecking=no -l root" "{{ hostvars[easy_rsa_host]['ansible_default_ipv4']['address'] }}:{{ PKI_DIR }}/{{ ca_cn }}.crt" "{{ host_pki_dir }}/{{ ca_cn }}.crt"
-  args:
-    creates: "{{ host_pki_dir }}/{{ ca_cn }}.crt"
+  copy:
+    src: "{{ LOCAL_REPO }}/ca.crt"
+    dest: "{{ host_pki_dir }}/"
+    mode: 0600
 
-- name: Generate secret
-  command: openvpn --genkey --secret {{ host_pki_dir }}/ta.key
-  args:
-    creates: "{{ host_pki_dir }}/ta.key"
+- name:  Copy dh to remote
+  copy:
+    src: "{{ LOCAL_REPO }}/servers/dh_{{ server_host }}.pem"
+    dest: "{{ host_pki_dir }}/"
+    mode: 0600
 
-- name: Template server.conf
-  template:
-    src: templates/server.conf
-    dest: /etc/openvpn/server.conf
-    owner: root
-    group: root
-    mode: '0660'
+- name:  Copy secret to remote
+  copy:
+    src: "{{ LOCAL_REPO }}/ta.key"
+    dest: "{{ host_pki_dir }}/"
+    mode: 0600
+
+- name: Copy server template
+  copy:
+    src: "{{ LOCAL_REPO }}/servers/{{ server_host }}.conf"
+    dest: "{{ OPEN_VPN_CFG }}/server.conf"
+    mode: 0600
 
 - name: Create ccd dir
   file:
-    path: /etc/openvpn/ccd
+    path: "{{ OPEN_VPN_CFG }}/ccd"
     state: directory
-    mode: '0770'
+    mode: '0700'
 
 - name: Enable Server
   command: systemctl enable openvpn@server.service

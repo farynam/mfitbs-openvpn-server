@@ -14,3 +14,6 @@ id_type: IP
 
 #easyrsa CA cert base name
 ca_cn: ca
+
+
+OPEN_VPN_CFG: /etc/openvpn
