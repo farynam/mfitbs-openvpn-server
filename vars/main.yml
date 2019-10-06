@@ -1,19 +1,4 @@
 ---
 # vars file for openvpn-server
 
-EASY_RSA_BIN: /usr/share/easy-rsa/
-
-#easyrsa cert repo path
-PKI_DIR: /root/pki
-
-#host PKI dir (keys, certs. etc)
-host_pki_dir: /etc/pki/openvpn
-
-#ID type (subject-alt-name) in cert cen be DNS or IP
-id_type: IP
-
-#easyrsa CA cert base name
-ca_cn: ca
-
-
-OPEN_VPN_CFG: /etc/openvpn
+DH_LEN: 4096

@@ -1,7 +1,5 @@
 - include_role:
     name: farynam.mfitbs_openvpn_easyrsa
-  vars:
-    importServerCertGen : true
 
 - name: Create host pki dir
   file:
@@ -11,48 +9,71 @@
 
 - name: Copy Server cert to the machine
   copy:
-    src: "{{ LOCAL_REPO }}/servers/issued/{{ server_host }}.crt"
+    src: "{{ LOCAL_REPO }}/servers/issued/{{ ansible_host }}.crt"
     dest: "{{ host_pki_dir }}/."
     mode: 0600
+  register: serv_cert_result
 
 - name: Copy Server key to the Server
   copy:
-    src: "{{ LOCAL_REPO }}/servers/private/{{ server_host }}.key"
+    src: "{{ LOCAL_REPO }}/servers/private/{{ ansible_host }}.key"
     dest: "{{ host_pki_dir }}/."
     mode: 0600
+  register: serv_key_result
 
 - name: Copy CA to the server
   copy:
     src: "{{ LOCAL_REPO }}/ca.crt"
     dest: "{{ host_pki_dir }}/"
     mode: 0600
+  register: serv_ca_result
 
-- name:  Copy dh to remote
-  copy:
-    src: "{{ LOCAL_REPO }}/servers/dh_{{ server_host }}.pem"
-    dest: "{{ host_pki_dir }}/"
-    mode: 0600
+- name: Generate diffie helman for a server
+  command: openssl dhparam -out "{{ host_pki_dir }}/dh.pem" {{ DH_LEN }}
+  args:
+    creates: "{{ host_pki_dir }}/dh.pem"
+  register: serv_dh_result
 
-- name:  Copy secret to remote
+- name: Copy secret to server
   copy:
     src: "{{ LOCAL_REPO }}/ta.key"
     dest: "{{ host_pki_dir }}/"
     mode: 0600
+  register: serv_ta_result
 
-- name: Copy server template
-  copy:
-    src: "{{ LOCAL_REPO }}/servers/{{ server_host }}.conf"
+- name: Template server
+  template:
+    src: templates/server.conf
     dest: "{{ OPEN_VPN_CFG }}/server.conf"
-    mode: 0600
+    mode: '0660'
+    force : false
+  register: serv_templ_result
 
 - name: Create ccd dir
   file:
     path: "{{ OPEN_VPN_CFG }}/ccd"
     state: directory
     mode: '0700'
+  register: serv_ccd_result
 
 - name: Enable Server
   command: systemctl enable openvpn@server.service
+  when: >
+    serv_ccd_result.changed
+    or serv_templ_result.changed
+    or serv_ta_result.changed
+    or serv_dh_result.changed
+    or serv_ca_result.changed
+    or serv_key_result.changed
+    or serv_cert_result.changed
 
 - name: Restart openvpn
   command: systemctl restart openvpn@server.service
+  when: >
+    serv_ccd_result.changed
+    or serv_templ_result.changed
+    or serv_ta_result.changed
+    or serv_dh_result.changed
+    or serv_ca_result.changed
+    or serv_key_result.changed
+    or serv_cert_result.changed
