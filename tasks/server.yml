@@ -28,7 +28,7 @@
     mode: 0600
   register: serv_ca_result
 
-- name: Generate diffie helman for a server
+- name: Generate Diffie Helman for a server
   command: openssl dhparam -out "{{ host_pki_dir }}/dh.pem" {{ DH_LEN }}
   args:
     creates: "{{ host_pki_dir }}/dh.pem"
