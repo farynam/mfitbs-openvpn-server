@@ -9,21 +9,21 @@
 
 - name: Copy Server cert to the machine
   copy:
-    src: "{{ LOCAL_REPO }}/servers/issued/{{ ansible_host }}.crt"
+    src: "{{ local_repo }}/servers/issued/{{ ansible_host }}.crt"
     dest: "{{ host_pki_dir }}/."
     mode: 0600
   register: serv_cert_result
 
 - name: Copy Server key to the Server
   copy:
-    src: "{{ LOCAL_REPO }}/servers/private/{{ ansible_host }}.key"
+    src: "{{ local_repo }}/servers/private/{{ ansible_host }}.key"
     dest: "{{ host_pki_dir }}/."
     mode: 0600
   register: serv_key_result
 
 - name: Copy CA to the server
   copy:
-    src: "{{ LOCAL_REPO }}/ca.crt"
+    src: "{{ local_repo }}/ca.crt"
     dest: "{{ host_pki_dir }}/"
     mode: 0600
   register: serv_ca_result
@@ -36,7 +36,7 @@
 
 - name: Copy secret to server
   copy:
-    src: "{{ LOCAL_REPO }}/ta.key"
+    src: "{{ local_repo }}/ta.key"
     dest: "{{ host_pki_dir }}/"
     mode: 0600
   register: serv_ta_result
